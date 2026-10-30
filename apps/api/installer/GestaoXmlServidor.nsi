@@ -184,6 +184,29 @@ Function OpenAccessData
   ExecShell "open" "$WINDIR\notepad.exe" '"$DataDir\DADOS-DE-ACESSO.txt"'
 FunctionEnd
 
+; Lê o arquivo inteiro (até ~8 KB) em $R9
+Function ReadAll
+  Exch $R8
+  Push $R7
+  Push $R6
+  StrCpy $R9 ""
+  ClearErrors
+  FileOpen $R7 $R8 r
+  ${IfNot} ${Errors}
+    ${Do}
+      FileRead $R7 $R6
+      ${If} ${Errors}
+        ${ExitDo}
+      ${EndIf}
+      StrCpy $R9 "$R9$R6"
+    ${Loop}
+    FileClose $R7
+  ${EndIf}
+  Pop $R6
+  Pop $R7
+  Pop $R8
+FunctionEnd
+
 ; Lê a primeira linha de um arquivo em $R9
 Function ReadFirstLine
   Exch $R8
@@ -216,7 +239,10 @@ Section "Servidor" SecMain
   ${EndIf}
 
   SetOutPath "$INSTDIR"
+  DetailPrint "Copiando os arquivos do sistema (pode levar alguns minutos)..."
+  SetDetailsPrint none
   File /r "${PAYLOAD}\*.*"
+  SetDetailsPrint both
   CreateDirectory "$DataDir"
 
   ; configuração (.env com segredos aleatórios na 1ª instalação)
@@ -233,13 +259,20 @@ Section "Servidor" SecMain
     ${EndIf}
     ClearErrors
   ${EndIf}
-  nsExec::ExecToLog '"$INSTDIR\node\node.exe" "$INSTDIR\tools\setup.cjs" configure --data "$DataDir" --app "$INSTDIR\app" --site "$SiteUrl" --master-password-file "$PLUGINSDIR\mpw.txt"'
+  Delete "$PLUGINSDIR\setup-resultado.txt"
+  nsExec::ExecToStack '"$INSTDIR\node\node.exe" "$INSTDIR\tools\setup.cjs" configure --data "$DataDir" --app "$INSTDIR\app" --site "$SiteUrl" --master-password-file "$PLUGINSDIR\mpw.txt" --result "$PLUGINSDIR\setup-resultado.txt"'
   Pop $0
+  Pop $1
   Delete "$PLUGINSDIR\mpw.txt"
+  DetailPrint "Configuração: código $0 $1"
   ${If} $0 != 0
-    Push "$DataDir\setup-resultado.txt"
-    Call ReadFirstLine
-    MessageBox MB_ICONSTOP "Falha ao gerar a configuração do servidor ($R9). Verifique o log da instalação." /SD IDOK
+    ; motivo: arquivo de resultado (sempre gravável) ou a saída do programa
+    Push "$PLUGINSDIR\setup-resultado.txt"
+    Call ReadAll
+    ${If} $R9 == ""
+      StrCpy $R9 $1
+    ${EndIf}
+    MessageBox MB_ICONSTOP "Falha ao gerar a configuração do servidor (código $0).$\r$\n$\r$\n$R9$\r$\nTire um print desta mensagem e envie ao suporte." /SD IDOK
   ${EndIf}
 
   ; somente Administradores e o sistema acessam dados, segredos e backups

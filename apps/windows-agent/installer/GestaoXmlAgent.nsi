@@ -222,7 +222,9 @@ Section "Gestão XML Agent" SecMain
   ${EndIf}
 
   SetOutPath "$INSTDIR"
+  SetDetailsPrint none
   File /r "${PAYLOAD}\*.*"
+  SetDetailsPrint both
   CreateDirectory "$INSTDIR\data\logs"
 
   ; configuração (o .env fica no perfil do usuário: só ele e administradores leem)

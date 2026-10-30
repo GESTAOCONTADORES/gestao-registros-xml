@@ -101,6 +101,26 @@ fs.writeFileSync(
 );
 console.log('› Instalando dependências da API para Windows x64...');
 run('npm', ['install', '--omit=dev', '--os=win32', '--cpu=x64', '--no-audit', '--no-fund', '--no-package-lock'], { cwd: app });
+// remove documentação, testes, tipagens e mapas das bibliotecas (instalação bem mais rápida)
+const PRUNE_DIRS = new Set(['test', 'tests', '__tests__', 'docs', 'doc', 'example', 'examples', '.github', 'benchmark', 'benchmarks', 'coverage']);
+const PRUNE_FILE = /(\.md|\.markdown|\.map|\.d\.ts|\.d\.mts|\.d\.cts|\.tsbuildinfo|\.flow)$|^(\.npmignore|\.eslintrc.*|\.prettierrc.*|\.editorconfig|tsconfig.*\.json|CHANGELOG.*|HISTORY.*)$/i;
+let pruned = 0;
+const prune = (dir) => {
+  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+    const p = path.join(dir, e.name);
+    if (e.isDirectory()) {
+      if (PRUNE_DIRS.has(e.name)) {
+        fs.rmSync(p, { recursive: true, force: true });
+        pruned++;
+      } else prune(p);
+    } else if (PRUNE_FILE.test(e.name) && !/^licen[cs]e/i.test(e.name)) {
+      fs.rmSync(p);
+      pruned++;
+    }
+  }
+};
+prune(path.join(app, 'node_modules'));
+console.log(`› ${pruned} itens desnecessários removidos das dependências`);
 if (!fs.existsSync(path.join(app, 'node_modules', '@node-rs', 'argon2-win32-x64-msvc'))) {
   throw new Error('Binário do Argon2 para Windows não foi instalado');
 }

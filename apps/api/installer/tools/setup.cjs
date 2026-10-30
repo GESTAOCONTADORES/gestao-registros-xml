@@ -124,7 +124,9 @@ function configure() {
     `Backups diários: ${env.BACKUP_DIR}`,
   ];
   fs.writeFileSync(path.join(data, 'DADOS-DE-ACESSO.txt'), '\uFEFF' + info.join('\r\n') + '\r\n');
-  fs.writeFileSync(path.join(data, 'setup-resultado.txt'), `OK\r\n${current ? 'atualizado' : 'criado'}\r\n`);
+  const result = `OK\r\n${current ? 'atualizado' : 'criado'}\r\n`;
+  fs.writeFileSync(path.join(data, 'setup-resultado.txt'), result);
+  if (opt('result')) fs.writeFileSync(opt('result'), result);
 }
 
 function waitHealth() {
@@ -154,9 +156,10 @@ try {
   else throw new Error('uso: setup.cjs configure|wait-health ...');
 } catch (e) {
   const data = opt('data');
-  if (data) {
+  for (const f of [opt('result'), data && path.join(data, 'setup-resultado.txt')]) {
+    if (!f) continue;
     try {
-      fs.writeFileSync(path.join(data, 'setup-resultado.txt'), `ERRO\r\n${e.message}\r\n`);
+      fs.writeFileSync(f, `ERRO\r\n${e.code ? `[${e.code}] ` : ''}${e.message}\r\n`);
     } catch {}
   }
   console.error(e.message);
