@@ -69,7 +69,7 @@ Var hAgent
 Page custom ConfigPage ConfigPageLeave
 !insertmacro MUI_PAGE_INSTFILES
 !define MUI_FINISHPAGE_TITLE "Servidor instalado"
-!define MUI_FINISHPAGE_TEXT "$HealthMsg$\r$\nAbra o sistema neste computador em http://localhost:3333 (atalho no Menu Iniciar).$\r$\n$TunnelMsg$\r$\n$\r$\nTOKEN DO AGENTE (use no instalador do Gestão XML Agent):$\r$\n$AgentToken$\r$\n$\r$\nTudo isso fica salvo em Menu Iniciar › Gestão XML Servidor › Dados de acesso."
+!define MUI_FINISHPAGE_TEXT "$HealthMsg$\r$\nSistema neste computador: http://localhost:3333$\r$\n$TunnelMsg$\r$\n$\r$\nToken do agente:$\r$\n$AgentToken"
 !define MUI_FINISHPAGE_SHOWREADME
 !define MUI_FINISHPAGE_SHOWREADME_TEXT "Abrir os dados de acesso (token do agente)"
 !define MUI_FINISHPAGE_SHOWREADME_FUNCTION OpenAccessData
@@ -184,6 +184,18 @@ Function OpenAccessData
   ExecShell "open" "$WINDIR\notepad.exe" '"$DataDir\DADOS-DE-ACESSO.txt"'
 FunctionEnd
 
+; Pasta de dados: somente Administradores e o sistema (SYSTEM).
+; A restrição é aplicada SÓ na pasta; arquivos e subpastas herdam dela (/reset).
+; (Aplicar /inheritance:r arquivo a arquivo deixava os arquivos sem acesso algum.)
+Function SecureDataDir
+  nsExec::Exec 'icacls "$DataDir" /setowner *S-1-5-32-544 /T /C /Q'
+  Pop $0
+  nsExec::Exec 'icacls "$DataDir" /inheritance:r /grant:r *S-1-5-32-544:(OI)(CI)F *S-1-5-18:(OI)(CI)F /C /Q'
+  Pop $0
+  nsExec::Exec 'icacls "$DataDir\*" /reset /T /C /Q'
+  Pop $0
+FunctionEnd
+
 ; Lê o arquivo inteiro (até ~8 KB) em $R9
 Function ReadAll
   Exch $R8
@@ -247,10 +259,7 @@ Section "Servidor" SecMain
 
   ; atualização: garante que os Administradores sejam donos e tenham acesso total aos dados
   ${If} ${FileExists} "$DataDir\*.*"
-    nsExec::Exec 'icacls "$DataDir" /setowner *S-1-5-32-544 /T /C /Q'
-    Pop $0
-    nsExec::Exec 'icacls "$DataDir" /grant *S-1-5-32-544:(OI)(CI)F *S-1-5-18:(OI)(CI)F /T /C /Q'
-    Pop $0
+    Call SecureDataDir
     nsExec::Exec 'attrib -R -H -S "$DataDir\.env"'
     Pop $0
   ${EndIf}
@@ -286,8 +295,7 @@ Section "Servidor" SecMain
   ${EndIf}
 
   ; somente Administradores e o sistema acessam dados, segredos e backups
-  nsExec::Exec 'icacls "$DataDir" /inheritance:r /grant:r *S-1-5-32-544:(OI)(CI)F *S-1-5-18:(OI)(CI)F /T /Q'
-  Pop $0
+  Call SecureDataDir
 
   ; serviço do Windows (WinSW): inicia com o Windows e reinicia sozinho em caso de falha
   DetailPrint "Registrando o serviço GestaoXmlApi..."
@@ -317,12 +325,12 @@ Section "Servidor" SecMain
   ${If} $0 == 0
     StrCpy $HealthMsg "OK: API em funcionamento neste computador (http://127.0.0.1:3333)."
   ${Else}
-    StrCpy $HealthMsg "ATENÇÃO: a API ainda não respondeu. Veja Menu Iniciar › Gestão XML Servidor › Status do servidor."
+    StrCpy $HealthMsg "ATENÇÃO: a API ainda não respondeu (veja Status do servidor)."
   ${EndIf}
   DetailPrint $HealthMsg
 
   ; Cloudflare Tunnel (serviço "Cloudflared")
-  StrCpy $TunnelMsg "Cloudflare Tunnel: não configurado nesta instalação (pode ser feito depois)."
+  StrCpy $TunnelMsg "Cloudflare Tunnel: não configurado (pode ser feito depois)."
   ${If} $TunnelToken != ""
     DetailPrint "Configurando o Cloudflare Tunnel..."
     nsExec::Exec 'sc query Cloudflared'
