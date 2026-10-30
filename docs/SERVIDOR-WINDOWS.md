@@ -13,6 +13,26 @@ Navegador ──https──▶ Cloudflare Pages (site)
                                           └─ Gestão XML Agent ──▶ G:\ (Google Drive)
 ```
 
+## Antes da Cloudflare: testar no seu computador (sem conta e sem domínio)
+O instalador do servidor também entrega o **site completo** em `http://localhost:3333`.
+Dá para testar tudo com os XML reais antes de configurar a Cloudflare:
+
+1. Execute `GestaoXmlServidor-Setup-1.0.0.exe` no computador que tem o Google Drive.
+   Deixe o **token do Cloudflare Tunnel em branco** e mantenha marcado
+   *Instalar também o Gestão XML Agent*.
+2. No instalador do agente (abre sozinho), clique em **Próximo › Instalar**.
+3. Abra *Menu Iniciar › Gestão XML Servidor › Abrir o sistema (neste computador)*
+   e entre com **Departamento pessoal** e a senha escolhida.
+4. Para colegas testarem de outros computadores, use *Criar link de teste
+   temporário*. Ele gera um endereço `https://….trycloudflare.com`, que vale enquanto
+   a janela estiver aberta e muda a cada vez. Envie só para quem vai testar e
+   feche a janela ao terminar.
+
+Quando os testes terminarem, siga os passos abaixo. **Não é preciso reinstalar
+nada do zero:** execute o mesmo instalador de novo, informe o endereço do site e
+o token do túnel, e os dados dos testes são mantidos. Se quiser começar com a base
+limpa, desinstale escolhendo apagar os dados e instale de novo.
+
 ## O que você vai precisar
 | Item | Observação |
 |---|---|
@@ -107,6 +127,8 @@ O que foi instalado:
 | Restaurar backup | Volta o banco para um backup. O banco atual é guardado e nada é trocado se o arquivo for inválido. |
 | Editar configuração | E-mail (SMTP), endereços do site etc. |
 | Dados de acesso | Token do agente e endereços |
+| Abrir o sistema (neste computador) | Site em `http://localhost:3333` |
+| Criar link de teste temporário | Endereço público temporário para testes (fechar a janela encerra) |
 | Abrir logs | Registros técnicos da API |
 
 **E-mail das solicitações de acesso:** em *Editar configuração*, preencha

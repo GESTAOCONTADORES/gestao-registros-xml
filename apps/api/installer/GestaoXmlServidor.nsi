@@ -69,7 +69,7 @@ Var hAgent
 Page custom ConfigPage ConfigPageLeave
 !insertmacro MUI_PAGE_INSTFILES
 !define MUI_FINISHPAGE_TITLE "Servidor instalado"
-!define MUI_FINISHPAGE_TEXT "$HealthMsg$\r$\n$TunnelMsg$\r$\n$\r$\nTOKEN DO AGENTE (use no instalador do Gestão XML Agent):$\r$\n$AgentToken$\r$\n$\r$\nTudo isso fica salvo em Menu Iniciar › Gestão XML Servidor › Dados de acesso."
+!define MUI_FINISHPAGE_TEXT "$HealthMsg$\r$\nAbra o sistema neste computador em http://localhost:3333 (atalho no Menu Iniciar).$\r$\n$TunnelMsg$\r$\n$\r$\nTOKEN DO AGENTE (use no instalador do Gestão XML Agent):$\r$\n$AgentToken$\r$\n$\r$\nTudo isso fica salvo em Menu Iniciar › Gestão XML Servidor › Dados de acesso."
 !define MUI_FINISHPAGE_SHOWREADME
 !define MUI_FINISHPAGE_SHOWREADME_TEXT "Abrir os dados de acesso (token do agente)"
 !define MUI_FINISHPAGE_SHOWREADME_FUNCTION OpenAccessData
@@ -306,6 +306,8 @@ Section "Servidor" SecMain
 
   ; atalhos de administração
   CreateDirectory "${STARTMENU}"
+  WriteINIStr "${STARTMENU}\Abrir o sistema (neste computador).url" "InternetShortcut" "URL" "http://localhost:3333"
+  CreateShortcut "${STARTMENU}\Criar link de teste temporário.lnk" "$INSTDIR\scripts\link-de-teste.cmd" "" "$SYSDIR\shell32.dll" 13
   CreateShortcut "${STARTMENU}\Status do servidor.lnk" "$INSTDIR\scripts\status.cmd" "" "$SYSDIR\shell32.dll" 15
   CreateShortcut "${STARTMENU}\Reiniciar servidor.lnk" "$INSTDIR\scripts\reiniciar.cmd" "" "$SYSDIR\shell32.dll" 238
   CreateShortcut "${STARTMENU}\Fazer backup agora.lnk" "$INSTDIR\scripts\backup-agora.cmd" "" "$SYSDIR\shell32.dll" 7
@@ -365,6 +367,7 @@ Section "Uninstall"
   RMDir /r "${STARTMENU}"
   RMDir /r "$INSTDIR\node"
   RMDir /r "$INSTDIR\app"
+  RMDir /r "$INSTDIR\web"
   RMDir /r "$INSTDIR\service"
   RMDir /r "$INSTDIR\tools"
   RMDir /r "$INSTDIR\scripts"

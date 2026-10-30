@@ -46,6 +46,7 @@ const envSchema = z.object({
   LOGO_PATH: z.string().optional().default(''),
   MAX_XML_FILE_MB: int(20),
   BACKUP_DIR: z.string().optional().default(''),
+  WEB_DIST_DIR: z.string().optional().default(''),
   BACKUP_KEEP: int(30),
   BACKUP_INTERVAL_HOURS: int(24),
 });
@@ -94,6 +95,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env) {
     approvalEmail: e.DP_APPROVAL_EMAIL,
     logoPath: e.LOGO_PATH ? resolve(e.LOGO_PATH) : '',
     maxXmlFileBytes: e.MAX_XML_FILE_MB * 1024 * 1024,
+    webDistDir: e.WEB_DIST_DIR ? resolve(e.WEB_DIST_DIR) : '',
     backup: { dir: e.BACKUP_DIR ? resolve(e.BACKUP_DIR) : '', keep: e.BACKUP_KEEP, intervalHours: e.BACKUP_INTERVAL_HOURS },
   };
 }

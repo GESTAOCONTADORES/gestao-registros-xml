@@ -23,7 +23,7 @@ function loadEnv() {
     const p = url.slice('pglite://'.length);
     if (!isAbsolute(p)) process.env.DATABASE_URL = `pglite://${resolve(base, p)}`;
   }
-  for (const key of ['LOGO_PATH', 'BACKUP_DIR']) {
+  for (const key of ['LOGO_PATH', 'BACKUP_DIR', 'WEB_DIST_DIR']) {
     const v = process.env[key];
     if (v && !isAbsolute(v)) process.env[key] = resolve(base, v);
   }

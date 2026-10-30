@@ -1,4 +1,4 @@
-import Fastify, { type FastifyInstance } from 'fastify';
+import Fastify, { type FastifyInstance, type FastifyRequest } from 'fastify';
 import cookie from '@fastify/cookie';
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
@@ -15,6 +15,7 @@ import { recordRoutes } from './routes/records';
 import { runRoutes } from './routes/runs';
 import { userRoutes } from './routes/users';
 import { createMailer, type Mailer } from './services/mail';
+import { createWebHandler } from './services/web';
 
 export interface BuildOptions {
   db: Db;
@@ -45,16 +46,29 @@ export async function buildApp(opts: BuildOptions): Promise<FastifyInstance> {
     contentSecurityPolicy: { directives: { defaultSrc: ["'none'"], frameAncestors: ["'none'"] } },
     crossOriginResourcePolicy: { policy: 'same-site' },
   });
-  await app.register(cors, {
-    origin: (origin, cb) => {
-      // sem Origin = chamadas servidor-servidor (agente, health check)
-      if (!origin || opts.config.corsOrigins.includes(origin)) return cb(null, true);
-      cb(new HttpError(403, 'Origem não autorizada'), false);
-    },
+  // CORS restrito: origens configuradas + o próprio endereço (site servido pela API / link de teste)
+  const corsBase = {
     credentials: true,
     methods: ['GET', 'POST', 'PATCH', 'DELETE'],
     exposedHeaders: ['Content-Disposition'],
     maxAge: 600,
+  };
+  const sameHost = (origin: string, req: FastifyRequest) => {
+    try {
+      const host = new URL(origin).host;
+      const forwarded = opts.config.trustProxy ? String(req.headers['x-forwarded-host'] ?? '').split(',')[0]?.trim() : '';
+      return host === req.headers.host || (!!forwarded && host === forwarded);
+    } catch {
+      return false;
+    }
+  };
+  await app.register(cors, () => (req: FastifyRequest, cb: (err: Error | null, o?: object) => void) => {
+    const origin = req.headers.origin;
+    // sem Origin = chamadas servidor-servidor (agente, health check)
+    if (!origin || opts.config.corsOrigins.includes(origin) || sameHost(origin, req)) {
+      return cb(null, { ...corsBase, origin: true });
+    }
+    cb(new HttpError(403, 'Origem não autorizada'));
   });
   await app.register(cookie);
   await app.register(rateLimit, {
@@ -81,7 +95,11 @@ export async function buildApp(opts: BuildOptions): Promise<FastifyInstance> {
     req.log.error({ err }, 'Erro interno');
     return reply.code(500).send({ statusCode: 500, code: 'INTERNAL', message: 'Erro interno. Tente novamente ou contate o suporte.' });
   });
-  app.setNotFoundHandler((_req, reply) => reply.code(404).send({ statusCode: 404, code: 'NOT_FOUND', message: 'Rota não encontrada.' }));
+  const web = opts.config.webDistDir ? createWebHandler(opts.config.webDistDir) : null;
+  app.setNotFoundHandler(async (req, reply) => {
+    if (web && (await web(req, reply))) return reply;
+    return reply.code(404).send({ statusCode: 404, code: 'NOT_FOUND', message: 'Rota não encontrada.' });
+  });
 
   app.get('/health', { config: { rateLimit: false } }, async () => {
     await ctx.db.query('SELECT 1');

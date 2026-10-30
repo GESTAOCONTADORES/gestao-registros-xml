@@ -1,6 +1,8 @@
 import type { SessionDTO } from '@gestao/shared';
 
-export const API_URL = ((import.meta.env.VITE_API_URL as string | undefined) ?? 'http://localhost:3333').replace(/\/$/, '');
+// "same-origin": o site é servido pela própria API (instalação local / teste)
+const RAW_API_URL = (import.meta.env.VITE_API_URL as string | undefined) ?? 'http://localhost:3333';
+export const API_URL = RAW_API_URL === 'same-origin' ? '' : RAW_API_URL.replace(/\/$/, '');
 
 export class ApiError extends Error {
   constructor(

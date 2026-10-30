@@ -15,12 +15,14 @@ function apiOriginInHeaders(apiUrl: string): Plugin {
     closeBundle() {
       const file = resolve(__dirname, 'dist', '_headers');
       let origin = '';
-      try {
-        origin = new URL(apiUrl).origin;
-      } catch {
-        throw new Error(`VITE_API_URL inválida: "${apiUrl}"`);
+      if (apiUrl !== 'same-origin') {
+        try {
+          origin = new URL(apiUrl).origin;
+        } catch {
+          throw new Error(`VITE_API_URL inválida: "${apiUrl}" (use https://... ou same-origin)`);
+        }
       }
-      writeFileSync(file, readFileSync(file, 'utf8').replaceAll('%API_ORIGIN%', origin));
+      writeFileSync(file, readFileSync(file, 'utf8').replaceAll(' %API_ORIGIN%', origin ? ` ${origin}` : ''));
     },
   };
 }

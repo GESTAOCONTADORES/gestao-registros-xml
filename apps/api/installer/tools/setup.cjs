@@ -74,6 +74,8 @@ function configure() {
     MASTER_DEPARTMENT: 'Departamento Pessoal',
     MASTER_INITIAL_PASSWORD: masterPassword || 'DP102030',
     LOGO_PATH: path.join(app, 'assets', 'logo-gestao-contadores.png'),
+    // site servido pela própria API em http://localhost:3333 (teste local / link de teste)
+    WEB_DIST_DIR: path.join(app, '..', 'web'),
     SMTP_HOST: '',
     SMTP_PORT: '587',
     SMTP_SECURE: 'false',
@@ -108,6 +110,7 @@ function configure() {
     'Login inicial:  Departamento pessoal',
     'Senha inicial:  a informada na instalação (padrão DP102030) — troque no primeiro acesso.',
     '',
+    'Sistema neste computador (teste): http://localhost:3333',
     'API neste computador:  http://localhost:3333   (teste: http://localhost:3333/health)',
     'API pela internet:     o endereço público configurado no Cloudflare Tunnel (https://...)',
     '',

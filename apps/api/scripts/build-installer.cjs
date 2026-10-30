@@ -63,6 +63,10 @@ execSync('npm run installer', { cwd: agentDir, stdio: 'inherit' });
 const agentVersion = require(path.join(agentDir, 'package.json')).version;
 const agentSetup = path.join(agentDir, 'release', `GestaoXmlAgent-Setup-${agentVersion}.exe`);
 
+// site servido pela própria API (http://localhost:3333 e link de teste)
+console.log('› Compilando o site (mesmo endereço da API)...');
+execSync('npm run build -w @gestao/web', { cwd: root, stdio: 'inherit', env: { ...process.env, VITE_API_URL: 'same-origin' } });
+
 // 2. binários de terceiros
 fs.mkdirSync(cacheDir, { recursive: true });
 for (const b of BINARIES) download(b.url, path.join(cacheDir, b.file), b.sha256);
@@ -72,7 +76,7 @@ download(`https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-win-x64
 // 3. monta o conteúdo
 console.log('› Montando o pacote...');
 fs.rmSync(buildDir, { recursive: true, force: true });
-for (const d of ['node', 'app', 'service', 'tools', 'scripts', 'cloudflared', 'agente']) {
+for (const d of ['node', 'app', 'web', 'service', 'tools', 'scripts', 'cloudflared', 'agente']) {
   fs.mkdirSync(path.join(payload, d), { recursive: true });
 }
 const extract = path.join(buildDir, 'node-extract');
@@ -104,6 +108,10 @@ fs.mkdirSync(path.join(app, 'assets'), { recursive: true });
 const logo = path.join(root, 'apps', 'web', 'public', 'assets', 'logo-gestao-contadores.png');
 if (fs.existsSync(logo)) fs.copyFileSync(logo, path.join(app, 'assets', 'logo-gestao-contadores.png'));
 
+copyDir(path.join(root, 'apps', 'web', 'dist'), path.join(payload, 'web'));
+if (!fs.readFileSync(path.join(payload, 'web', '_headers'), 'utf8').includes("connect-src 'self';")) {
+  throw new Error('Build do site não está no modo same-origin');
+}
 fs.copyFileSync(path.join(cacheDir, 'WinSW.NET461.exe'), path.join(payload, 'service', 'GestaoXmlApi.exe'));
 fs.copyFileSync(path.join(cacheDir, BINARIES[1].file), path.join(payload, 'cloudflared', 'cloudflared.exe'));
 fs.copyFileSync(path.join(apiDir, 'installer', 'tools', 'setup.cjs'), path.join(payload, 'tools', 'setup.cjs'));

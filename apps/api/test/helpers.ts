@@ -46,7 +46,7 @@ async function createTestDb(): Promise<{ db: Db; drop: () => Promise<void> }> {
   };
 }
 
-export async function createTestEnv(): Promise<TestEnv> {
+export async function createTestEnv(extraEnv: Record<string, string> = {}): Promise<TestEnv> {
   const { db, drop } = await createTestDb();
   await migrate(db);
   await seed(db, { masterName: 'Departamento pessoal', masterDepartment: 'Departamento Pessoal', masterPassword: MASTER.password });
@@ -59,6 +59,7 @@ export async function createTestEnv(): Promise<TestEnv> {
     DP_APPROVAL_EMAIL: 'dp@example.test',
     CORS_ORIGINS: 'http://localhost:5173',
     LOGIN_RATE_LIMIT_PER_MINUTE: '1000',
+    ...extraEnv,
   });
   const mails: MailMessage[] = [];
   const mail: Mailer = {
