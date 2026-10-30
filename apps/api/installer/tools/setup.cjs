@@ -13,6 +13,51 @@ const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
 const http = require('node:http');
+const { spawnSync } = require('node:child_process');
+
+const run = (cmd, args) => spawnSync(cmd, args, { encoding: 'utf8', windowsHide: true });
+
+/**
+ * Grava um arquivo mesmo que uma instalação anterior o tenha deixado protegido
+ * (somente leitura, oculto, dono diferente). Em último caso explica o motivo.
+ */
+function writeSafe(file, data) {
+  try {
+    fs.writeFileSync(file, data);
+    return;
+  } catch (e) {
+    if (!['EPERM', 'EACCES'].includes(e.code)) throw e;
+  }
+  try {
+    fs.chmodSync(file, 0o666);
+  } catch {}
+  if (process.platform === 'win32') {
+    run('attrib', ['-R', '-H', '-S', file]);
+    run('icacls', [file, '/setowner', '*S-1-5-32-544', '/C', '/Q']);
+    run('icacls', [file, '/grant', '*S-1-5-32-544:F', '*S-1-5-18:F', '/C', '/Q']);
+  }
+  try {
+    fs.writeFileSync(file, data);
+    return;
+  } catch {}
+  // último recurso: regrava o arquivo existente sem recriá-lo
+  try {
+    const fd = fs.openSync(file, 'r+');
+    fs.ftruncateSync(fd, 0);
+    fs.writeSync(fd, data);
+    fs.closeSync(fd);
+  } catch (e) {
+    let diag = '';
+    if (process.platform === 'win32') {
+      const attrib = (run('attrib', [file]).stdout || '').trim();
+      const acl = (run('icacls', [file]).stdout || '').replace(/\s+/g, ' ').trim();
+      diag = ` | atributos: ${attrib} | permissões: ${acl}`;
+    }
+    const err = new Error(`Sem permissão para gravar ${file}. Verifique se algum antivírus bloqueou o node.exe${diag}`);
+    err.code = e.code;
+    throw err;
+  }
+}
 
 const args = process.argv.slice(2);
 const cmd = args[0];
@@ -99,8 +144,8 @@ function configure() {
     // aspas simples: valor literal (caminhos do Windows têm "\")
     ...Object.entries(env).map(([k, v]) => `${k}=${/[\s#"'\\]/.test(v) ? `'${v}'` : v}`),
   ];
-  fs.writeFileSync(envFile, lines.join('\r\n') + '\r\n');
-  fs.writeFileSync(path.join(data, 'agent-token.txt'), env.AGENT_API_TOKEN);
+  writeSafe(envFile, lines.join('\r\n') + '\r\n');
+  writeSafe(path.join(data, 'agent-token.txt'), env.AGENT_API_TOKEN);
 
   const info = [
     'GESTÃO XML — DADOS DE ACESSO (guarde em local seguro)',
@@ -123,9 +168,9 @@ function configure() {
     `Configuração: ${envFile}`,
     `Backups diários: ${env.BACKUP_DIR}`,
   ];
-  fs.writeFileSync(path.join(data, 'DADOS-DE-ACESSO.txt'), '\uFEFF' + info.join('\r\n') + '\r\n');
+  writeSafe(path.join(data, 'DADOS-DE-ACESSO.txt'), '\uFEFF' + info.join('\r\n') + '\r\n');
   const result = `OK\r\n${current ? 'atualizado' : 'criado'}\r\n`;
-  fs.writeFileSync(path.join(data, 'setup-resultado.txt'), result);
+  writeSafe(path.join(data, 'setup-resultado.txt'), result);
   if (opt('result')) fs.writeFileSync(opt('result'), result);
 }
 

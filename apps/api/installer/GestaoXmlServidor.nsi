@@ -245,6 +245,16 @@ Section "Servidor" SecMain
   SetDetailsPrint both
   CreateDirectory "$DataDir"
 
+  ; atualização: garante que os Administradores sejam donos e tenham acesso total aos dados
+  ${If} ${FileExists} "$DataDir\*.*"
+    nsExec::Exec 'icacls "$DataDir" /setowner *S-1-5-32-544 /T /C /Q'
+    Pop $0
+    nsExec::Exec 'icacls "$DataDir" /grant *S-1-5-32-544:(OI)(CI)F *S-1-5-18:(OI)(CI)F /T /C /Q'
+    Pop $0
+    nsExec::Exec 'attrib -R -H -S "$DataDir\.env"'
+    Pop $0
+  ${EndIf}
+
   ; configuração (.env com segredos aleatórios na 1ª instalação)
   DetailPrint "Gerando a configuração..."
   InitPluginsDir
