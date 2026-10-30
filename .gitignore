@@ -1,0 +1,35 @@
+# dependências e builds
+node_modules
+dist
+build
+coverage
+*.tsbuildinfo
+
+# segredos
+.env
+.env.local
+.env.*.local
+apps/*/.env
+apps/*/.env.local
+
+# logs
+logs
+*.log
+
+# bancos locais (podem conter dados reais)
+data/
+*.db
+*.sqlite
+*.sqlite3
+.pglite/
+
+# dados do agente
+apps/windows-agent/agent-data/
+
+# SO / editores
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+.idea
+release/

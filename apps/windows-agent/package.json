@@ -1,0 +1,21 @@
+{
+  "name": "@gestao/windows-agent",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Gestão XML Agent — acessa a pasta compartilhada do Departamento Pessoal",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "build": "tsup",
+    "start": "node dist/agent.cjs",
+    "package": "npm run build && node scripts/package.cjs"
+  },
+  "dependencies": {
+    "@gestao/shared": "*",
+    "@gestao/xml-parser": "*"
+  },
+  "devDependencies": {
+    "tsup": "^8.3.0",
+    "tsx": "^4.19.0"
+  }
+}

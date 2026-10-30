@@ -1,0 +1,36 @@
+{
+  "name": "gestao-registros-xml",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Departamento Pessoal / REGISTROS XML-PDF — Gestão Contadores",
+  "workspaces": [
+    "packages/shared",
+    "packages/xml-parser",
+    "packages/database",
+    "apps/api",
+    "apps/windows-agent",
+    "apps/web"
+  ],
+  "scripts": {
+    "dev:api": "npm run dev -w @gestao/api",
+    "dev:web": "npm run dev -w @gestao/web",
+    "dev:agent": "npm run dev -w @gestao/windows-agent",
+    "db:migrate": "npm run migrate -w @gestao/database",
+    "db:seed": "npm run seed -w @gestao/database",
+    "build": "npm run build -w @gestao/api && npm run build -w @gestao/windows-agent && npm run build -w @gestao/web",
+    "build:web": "npm run build -w @gestao/web",
+    "build:api": "npm run build -w @gestao/api",
+    "build:agent": "npm run build -w @gestao/windows-agent",
+    "typecheck": "tsc -p packages/shared && tsc -p packages/xml-parser && tsc -p packages/database && tsc -p apps/api && tsc -p apps/windows-agent && tsc -p apps/web",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

@@ -1,0 +1,40 @@
+# Ambiente local com PostgreSQL + API.
+#   docker compose up -d db          → apenas o banco (para rodar a API com npm run dev:api)
+#   docker compose up -d --build     → banco + API em container
+# O front-end roda com "npm run dev:web" (ou é publicado no Cloudflare Pages).
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: gestao_xml
+      POSTGRES_USER: gestao
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-gestao_dev_somente_local}
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gestao -d gestao_xml"]
+      interval: 5s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: postgres://gestao:${POSTGRES_PASSWORD:-gestao_dev_somente_local}@db:5432/gestao_xml
+      LOGO_PATH: /app/assets/logo-gestao-contadores.png
+    volumes:
+      - ./apps/web/public/assets:/app/assets:ro
+    ports:
+      - "127.0.0.1:3333:3333"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:
