@@ -1,4 +1,4 @@
-<#
+﻿<#
   Gestão XML Agent — instalação como Tarefa Agendada "ao fazer logon".
 
   Esta é a forma MAIS CONFIÁVEL quando a pasta está no Google Drive para computador:
@@ -11,13 +11,16 @@
 $ErrorActionPreference = 'Stop'
 $base   = Split-Path -Parent $PSScriptRoot
 $script = Join-Path $base 'dist\agent.cjs'
-$node   = (Get-Command node.exe -ErrorAction Stop).Source
+if (-not (Test-Path (Join-Path $base 'node\node.exe'))) { $null = Get-Command node.exe -ErrorAction Stop }
 
 if (-not (Test-Path $script)) { throw "Arquivo não encontrado: $script" }
 if (-not (Test-Path (Join-Path $base '.env'))) { throw 'Crie o arquivo .env (a partir de .env.example) antes de instalar.' }
 
 $taskName = 'GestaoXmlAgent'
-$action   = New-ScheduledTaskAction -Execute $node -Argument "`"$script`"" -WorkingDirectory $base
+# o inicializador roda o agente SEM janela e o reinicia se ele parar
+$ps       = "$env:WINDIR\System32\WindowsPowerShell\v1.0\powershell.exe"
+$launcher = Join-Path $PSScriptRoot 'launcher.ps1'
+$action   = New-ScheduledTaskAction -Execute $ps -Argument "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$launcher`"" -WorkingDirectory $base
 $trigger  = New-ScheduledTaskTrigger -AtLogOn -User "$env:USERDOMAIN\$env:USERNAME"
 $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries `
             -RestartCount 999 -RestartInterval (New-TimeSpan -Minutes 1) `

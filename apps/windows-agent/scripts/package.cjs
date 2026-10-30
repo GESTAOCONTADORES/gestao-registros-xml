@@ -11,7 +11,7 @@ fs.rmSync(out, { recursive: true, force: true });
 fs.mkdirSync(path.join(out, 'dist'), { recursive: true });
 fs.mkdirSync(path.join(out, 'scripts'), { recursive: true });
 fs.copyFileSync(path.join(base, 'dist', 'agent.cjs'), path.join(out, 'dist', 'agent.cjs'));
-for (const f of ['install-service.cjs', 'uninstall-service.cjs', 'install-task.ps1', 'uninstall-task.ps1', 'start-agent.cmd']) {
+for (const f of ['install-service.cjs', 'uninstall-service.cjs', 'install-task.ps1', 'uninstall-task.ps1', 'start-agent.cmd', 'launcher.ps1', 'iniciar-agente.ps1', 'parar-agente.ps1', 'testar-conexao.cmd']) {
   fs.copyFileSync(path.join(base, 'scripts', f), path.join(out, 'scripts', f));
 }
 fs.copyFileSync(path.join(base, '.env.example'), path.join(out, '.env.example'));
@@ -33,6 +33,7 @@ fs.writeFileSync(
     '     npm install node-windows@1.0.0-beta.8',
     '     node scripts\\install-service.cjs',
     '',
+    'Mais simples: use o instalador GestaoXmlAgent-Setup.exe (npm run installer).',
     'Guia completo: docs/AGENTE-WINDOWS.md no repositório.',
   ].join('\r\n'),
 );

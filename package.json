@@ -2,7 +2,7 @@
   "name": "gestao-registros-xml",
   "private": true,
   "version": "1.0.0",
-  "description": "Departamento Pessoal / REGISTROS XML-PDF — Gestão Contadores",
+  "description": "Departamento Pessoal / REGISTROS XML-PDF \u2014 Gest\u00e3o Contadores",
   "workspaces": [
     "packages/shared",
     "packages/xml-parser",
@@ -23,7 +23,8 @@
     "build:agent": "npm run build -w @gestao/windows-agent",
     "typecheck": "tsc -p packages/shared && tsc -p packages/xml-parser && tsc -p packages/database && tsc -p apps/api && tsc -p apps/windows-agent && tsc -p apps/web",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "installer:agent": "npm run installer -w @gestao/windows-agent"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",

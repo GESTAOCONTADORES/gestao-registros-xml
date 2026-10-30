@@ -17,10 +17,18 @@ export interface AgentConfig {
 
 export const AGENT_VERSION = '1.0.0';
 
+/** UTF-8 (com ou sem BOM), UTF-16 LE ou ANSI/Windows-1252 (gravado pelo instalador). */
+export function decodeText(buf: Buffer): string {
+  if (buf[0] === 0xff && buf[1] === 0xfe) return buf.subarray(2).toString('utf16le');
+  if (buf[0] === 0xef && buf[1] === 0xbb && buf[2] === 0xbf) return buf.subarray(3).toString('utf8');
+  const utf8 = buf.toString('utf8');
+  return utf8.includes('\uFFFD') ? new TextDecoder('windows-1252').decode(buf) : utf8;
+}
+
 /** Lê um arquivo .env simples (CHAVE=valor) sem sobrescrever variáveis já definidas. */
 export function loadEnvFile(file: string) {
   if (!existsSync(file)) return;
-  for (const line of readFileSync(file, 'utf8').split(/\r?\n/)) {
+  for (const line of decodeText(readFileSync(file)).split(/\r?\n/)) {
     const m = /^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/.exec(line);
     if (!m || line.trim().startsWith('#')) continue;
     let value = m[2]!;

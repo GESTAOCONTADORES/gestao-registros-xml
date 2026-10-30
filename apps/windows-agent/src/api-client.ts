@@ -1,3 +1,5 @@
+import http from 'node:http';
+import https from 'node:https';
 import type {
   AgentCompleteInput,
   AgentControlResponse,
@@ -20,6 +22,33 @@ export class ApiError extends Error {
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+interface RawResponse {
+  status: number;
+  body: Buffer;
+}
+
+/** HTTP(S) com node:http — mais compatível que fetch em ambientes Windows restritos. */
+function send(url: string, method: string, headers: Record<string, string>, body: string | undefined, timeoutMs: number) {
+  return new Promise<RawResponse>((resolve, reject) => {
+    const u = new URL(url);
+    const lib = u.protocol === 'https:' ? https : http;
+    const req = lib.request(
+      u,
+      { method, headers: { ...headers, ...(body !== undefined ? { 'Content-Length': String(Buffer.byteLength(body)) } : {}) } },
+      (res) => {
+        const chunks: Buffer[] = [];
+        res.on('data', (c: Buffer) => chunks.push(c));
+        res.on('end', () => resolve({ status: res.statusCode ?? 0, body: Buffer.concat(chunks) }));
+        res.on('error', reject);
+      },
+    );
+    req.setTimeout(timeoutMs, () => req.destroy(new Error(`tempo esgotado após ${Math.round(timeoutMs / 1000)}s`)));
+    req.on('error', reject);
+    if (body !== undefined) req.write(body);
+    req.end();
+  });
+}
+
 /** Cliente HTTP do agente. Toda comunicação é de SAÍDA, autenticada com AGENT_API_TOKEN. */
 export class AgentApi {
   constructor(
@@ -33,29 +62,29 @@ export class AgentApi {
     let attempt = 0;
     for (;;) {
       try {
-        const res = await fetch(`${this.baseUrl}${path}`, {
+        const res = await send(
+          `${this.baseUrl}${path}`,
           method,
-          headers: {
+          {
             Authorization: `Bearer ${this.token}`,
+            Accept: 'application/json',
             ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),
           },
-          body: body !== undefined ? JSON.stringify(body) : undefined,
-          signal: AbortSignal.timeout(opts.timeoutMs ?? 120_000),
-        });
-        if (!res.ok) {
+          body !== undefined ? JSON.stringify(body) : undefined,
+          opts.timeoutMs ?? 120_000,
+        );
+        if (res.status < 200 || res.status >= 300) {
           let message = `HTTP ${res.status}`;
           try {
-            const j = (await res.json()) as { message?: string };
+            const j = JSON.parse(res.body.toString('utf8')) as { message?: string };
             if (j.message) message = j.message;
           } catch {
             // corpo não-JSON
           }
-          // 4xx não adianta repetir (exceto 429)
-          if (res.status < 500 && res.status !== 429) throw new ApiError(res.status, message);
           throw new ApiError(res.status, message);
         }
-        if (opts.raw) return Buffer.from(await res.arrayBuffer()) as T;
-        return (await res.json()) as T;
+        if (opts.raw) return res.body as T;
+        return JSON.parse(res.body.toString('utf8')) as T;
       } catch (e) {
         const retriable = !(e instanceof ApiError) || e.status >= 500 || e.status === 429;
         if (!retriable || attempt >= retries) throw e;

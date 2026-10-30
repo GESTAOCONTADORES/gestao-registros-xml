@@ -133,13 +133,16 @@ Resumo (detalhes em [docs/INSTALACAO.md](docs/INSTALACAO.md)):
    `apps/web/public/assets/logo-gestao-contadores.png` (e aponte `LOGO_PATH`
    da API para ele, para os PDFs). Nenhuma logo foi criada ou redesenhada.
 
-### Windows — agente como serviço
+### Windows — instalador do agente
 ```bash
-npm run package -w @gestao/windows-agent   # gera apps/windows-agent/release/GestaoXmlAgent
+npm run installer -w @gestao/windows-agent   # requer NSIS (sudo apt-get install nsis)
 ```
-Copie a pasta gerada para o computador do DP e siga o `LEIA-ME.txt`
-(Tarefa Agendada ao fazer logon — recomendada com Google Drive — ou Windows
-Service via `node-windows`).
+Gera `apps/windows-agent/release/GestaoXmlAgent-Setup-1.0.0.exe`: um único
+arquivo, com Node.js embutido e sem exigir administrador. Ele pede o endereço da
+API, o token e a pasta, testa a conexão e deixa o agente iniciando sozinho a
+cada logon. O GitHub Actions também gera esse arquivo (workflow *Instalador do agente*).
+Instalação manual (Tarefa Agendada ou Windows Service): `npm run package -w @gestao/windows-agent`.
+Detalhes em [docs/AGENTE-WINDOWS.md](docs/AGENTE-WINDOWS.md).
 
 ---
 

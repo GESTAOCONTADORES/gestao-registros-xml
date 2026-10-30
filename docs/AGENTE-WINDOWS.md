@@ -12,6 +12,68 @@ Ele fica num computador/servidor do Departamento Pessoal e:
   com `AGENT_API_TOKEN`. Nenhuma porta é aberta e a unidade `G:` não é
   compartilhada.
 
+## Instalação rápida (recomendada): `GestaoXmlAgent-Setup.exe`
+
+Um único arquivo, **com o Node.js embutido**, que **não exige administrador**.
+
+1. Entre no Windows com o usuário que tem o **Google Drive para computador** aberto.
+2. Execute `GestaoXmlAgent-Setup-1.0.0.exe` e clique em **Próximo**.
+3. Na tela **Conexão com o sistema**, informe:
+   - **Endereço da API** (ex.: `https://api-registros.gestaocontadores.com.br`);
+   - **Token do agente** (o mesmo `AGENT_API_TOKEN` da API);
+   - **Pasta monitorada**: já vem preenchida com
+     `G:\Drives compartilhados\Departamento Pessoal\REGISTROS ROBO XML - PDF`.
+4. Clique em **Instalar**. Ao final o instalador **testa a pasta e a conexão** e
+   mostra o resultado. O agente já fica em execução e o sistema web passa a
+   mostrar **Agente XML ● Online**.
+
+O que o instalador faz:
+- instala em `%LOCALAPPDATA%\Programs\GestaoXmlAgent` (perfil do usuário: o
+  token no `.env` fica protegido pelas permissões do próprio perfil);
+- inicia o agente **sem janela a cada logon** (atalho na pasta Inicializar) e o
+  **reinicia sozinho** se ele parar;
+- cria no Menu Iniciar › **Gestão XML Agent**: *Iniciar agente*, *Parar agente*,
+  *Testar conexão*, *Abrir logs*, *Editar configuração* e *Desinstalar*;
+- registra o programa em *Configurações › Aplicativos* (desinstalação normal).
+
+**Atualizar:** basta executar o novo `Setup.exe`. A configuração atual é
+reaproveitada (os campos já vêm preenchidos) e o agente é reiniciado.
+**Desinstalar:** Menu Iniciar › Gestão XML Agent › Desinstalar. Nenhum arquivo
+da pasta do Google Drive é tocado.
+
+### Instalação silenciosa (TI / várias máquinas)
+Use aspas nos valores (o instalador usa `/` como separador de opções):
+```bat
+GestaoXmlAgent-Setup-1.0.0.exe /S /API="https://api-registros.gestaocontadores.com.br" /TOKEN="<token>" /ROOT="G:\Drives compartilhados\Departamento Pessoal\REGISTROS ROBO XML - PDF"
+```
+Código de saída `0` = instalado; `2` = parâmetros inválidos; `3` = Windows 32 bits.
+Desinstalação silenciosa: `"%LOCALAPPDATA%\Programs\GestaoXmlAgent\Desinstalar.exe" /S`.
+
+### Aviso do Windows SmartScreen
+Enquanto o instalador não for **assinado digitalmente**, o Windows pode exibir
+"O Windows protegeu o computador". Clique em **Mais informações › Executar assim
+mesmo**. Para eliminar o aviso, adquira um certificado de assinatura de código
+(de preferência EV) e gere o instalador com
+`SIGN_PFX=certificado.pfx SIGN_PASSWORD=... npm run installer -w @gestao/windows-agent`.
+
+### Gerar o instalador
+```bash
+sudo apt-get install nsis        # Linux (no Windows: instale o NSIS 3)
+npm ci
+npm run installer -w @gestao/windows-agent
+```
+Saída: `apps/windows-agent/release/GestaoXmlAgent-Setup-<versão>.exe`. O Node.js
+oficial (win-x64) é baixado de nodejs.org e conferido por SHA-256. O GitHub
+Actions também gera o instalador automaticamente (workflow *Instalador do agente*).
+
+> Se uma política de grupo (GPO) da empresa bloquear scripts PowerShell, a
+> inicialização automática não funcionará; nesse caso use a instalação manual
+> como Windows Service (seção 3.B) ou peça à TI uma exceção para a pasta do agente.
+
+---
+
+## Instalação manual (alternativa)
+
 ## 1. Requisitos
 - Windows 10/11 ou Windows Server com **Google Drive para computador** logado
   numa conta com acesso ao Drive compartilhado do DP.
@@ -20,7 +82,7 @@ Ele fica num computador/servidor do Departamento Pessoal e:
 
 ## 2. ⚠️ Ponto crítico: a unidade G: existe só na sessão do usuário
 O Google Drive para computador cria a unidade `G:` **dentro da sessão de quem
-fez login**. Um Windows Service padrão (conta *LocalSystem*) roda em outra
+fez login** (por isso o instalador roda o agente na sessão do usuário). Um Windows Service padrão (conta *LocalSystem*) roda em outra
 sessão e normalmente **não enxerga `G:`**. Por isso há duas formas de instalação:
 
 | Forma | Quando usar |
