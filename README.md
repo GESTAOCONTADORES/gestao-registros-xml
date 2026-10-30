@@ -116,6 +116,12 @@ criado, registrado e salvo em `RELATORIOS ROBO`.
 
 ## 2. Produção
 
+> **Caminho escolhido (opção B — servidor no escritório + Cloudflare Tunnel):**
+> siga [docs/SERVIDOR-WINDOWS.md](docs/SERVIDOR-WINDOWS.md). São dois instaladores
+> (`GestaoXmlServidor-Setup.exe` e `GestaoXmlAgent-Setup.exe`), sem linha de comando.
+> Para gerá-los: `npm run installer -w @gestao/api` (requer NSIS) ou pelo GitHub
+> Actions (workflow *Instaladores*).
+
 Resumo (detalhes em [docs/INSTALACAO.md](docs/INSTALACAO.md)):
 
 1. **GitHub** — versione este repositório (o `.gitignore` já exclui `.env`,
@@ -158,7 +164,8 @@ Detalhes em [docs/AGENTE-WINDOWS.md](docs/AGENTE-WINDOWS.md).
 
 ## 4. Documentação
 - [docs/ARQUITETURA.md](docs/ARQUITETURA.md) — arquitetura, fluxo, modelo, riscos
-- [docs/INSTALACAO.md](docs/INSTALACAO.md) — instalação passo a passo
+- [docs/SERVIDOR-WINDOWS.md](docs/SERVIDOR-WINDOWS.md) — opção B: servidor Windows + Cloudflare Tunnel (instaladores)
+- [docs/INSTALACAO.md](docs/INSTALACAO.md) — instalação passo a passo (nuvem / manual)
 - [docs/AGENTE-WINDOWS.md](docs/AGENTE-WINDOWS.md) — agente, serviço, logs, cache
 - [docs/CLOUDFLARE.md](docs/CLOUDFLARE.md) — publicação no Cloudflare
 - [docs/BANCO-DE-DADOS.md](docs/BANCO-DE-DADOS.md) — tabelas, índices, backup

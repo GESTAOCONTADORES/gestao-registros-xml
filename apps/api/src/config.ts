@@ -45,6 +45,9 @@ const envSchema = z.object({
   DP_APPROVAL_EMAIL: z.string().optional().default(''),
   LOGO_PATH: z.string().optional().default(''),
   MAX_XML_FILE_MB: int(20),
+  BACKUP_DIR: z.string().optional().default(''),
+  BACKUP_KEEP: int(30),
+  BACKUP_INTERVAL_HOURS: int(24),
 });
 
 export type AppConfig = ReturnType<typeof loadConfig>;
@@ -91,5 +94,6 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env) {
     approvalEmail: e.DP_APPROVAL_EMAIL,
     logoPath: e.LOGO_PATH ? resolve(e.LOGO_PATH) : '',
     maxXmlFileBytes: e.MAX_XML_FILE_MB * 1024 * 1024,
+    backup: { dir: e.BACKUP_DIR ? resolve(e.BACKUP_DIR) : '', keep: e.BACKUP_KEEP, intervalHours: e.BACKUP_INTERVAL_HOURS },
   };
 }

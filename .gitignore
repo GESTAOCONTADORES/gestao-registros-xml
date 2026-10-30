@@ -35,3 +35,5 @@ Thumbs.db
 release/
 apps/windows-agent/installer/build/
 apps/windows-agent/installer/.cache/
+apps/api/installer/build/
+apps/api/installer/.cache/

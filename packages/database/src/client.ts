@@ -1,4 +1,4 @@
-import { mkdirSync } from 'node:fs';
+import { mkdirSync, rmSync } from 'node:fs';
 import { resolve } from 'node:path';
 import pg from 'pg';
 
@@ -15,6 +15,8 @@ export interface Db {
   /** Executa SQL com vários comandos (migrations). */
   exec(sql: string): Promise<void>;
   close(): Promise<void>;
+  /** Somente banco embutido (PGlite): cópia completa compactada (.tar.gz) da pasta de dados. */
+  backup?(): Promise<Buffer>;
 }
 
 export interface CreateDbOptions {
@@ -120,6 +122,38 @@ async function createPgliteDb(location: string): Promise<Db> {
     async close() {
       await lite.close();
     },
+    async backup() {
+      const blob = await lite.dumpDataDir('gzip');
+      return Buffer.from(await blob.arrayBuffer());
+    },
   };
   return db;
+}
+
+/**
+ * Restaura um backup (.tar.gz gerado por backup()) numa pasta de dados vazia do banco embutido.
+ * A API deve estar parada.
+ */
+export async function restorePglite(dataDir: string, backup: Buffer): Promise<void> {
+  if (backup.length < 1024 || backup[0] !== 0x1f || backup[1] !== 0x8b) {
+    throw new Error('Arquivo não é um backup válido (formato .tar.gz esperado)');
+  }
+  const { PGlite } = await import('@electric-sql/pglite');
+  const { pg_trgm } = await import('@electric-sql/pglite/contrib/pg_trgm');
+  mkdirSync(dataDir, { recursive: true });
+  const lite = new PGlite({
+    dataDir: resolve(dataDir),
+    extensions: { pg_trgm },
+    loadDataDir: new Blob([backup]),
+  });
+  await lite.waitReady;
+  // um arquivo inválido faria o PGlite criar um banco vazio: confere se é mesmo um banco do sistema
+  const check = await lite.query<{ n: number }>(
+    `SELECT count(*)::int AS n FROM pg_tables WHERE tablename IN ('schema_migrations', 'users', 'imported_files')`,
+  );
+  await lite.close();
+  if (check.rows[0]?.n !== 3) {
+    rmSync(dataDir, { recursive: true, force: true });
+    throw new Error('O arquivo não contém um banco do sistema REGISTROS XML-PDF');
+  }
 }

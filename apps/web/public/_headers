@@ -1,13 +1,12 @@
 # Cabeçalhos de segurança do Cloudflare Pages.
-# IMPORTANTE: substitua https://api.seudominio.com.br em connect-src pela origem real da API
-# (o mesmo valor de VITE_API_URL). Sem isso o navegador bloqueia as chamadas à API.
+# %API_ORIGIN% é preenchido no build com a origem de VITE_API_URL (vite.config.ts).
 /*
   X-Frame-Options: DENY
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
   Strict-Transport-Security: max-age=31536000; includeSubDomains
-  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://api.seudominio.com.br; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' %API_ORIGIN%; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'
 
 /assets/*
   Cache-Control: public, max-age=31536000, immutable

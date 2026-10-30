@@ -15,6 +15,9 @@ A API não roda dentro do Cloudflare Workers porque usa recursos de Node.js
 persistentes). Se no futuro desejar Workers, a API precisaria ser adaptada
 (Hono + Hyperdrive + R2); a comunicação com o agente continuaria idêntica.
 
+> Usando o servidor no escritório (opção B)? O guia completo, com o instalador que
+> configura o túnel sozinho, está em [SERVIDOR-WINDOWS.md](SERVIDOR-WINDOWS.md).
+
 ## 1. Domínios recomendados
 Use subdomínios do **mesmo domínio**, por exemplo:
 - `registros.gestaocontadores.com.br` → Cloudflare Pages (front)
@@ -41,7 +44,8 @@ Com domínios diferentes (ex.: `*.pages.dev`), use `COOKIE_SAMESITE=none` e
 3. **Custom domains** → adicione `registros.gestaocontadores.com.br`.
 4. Os arquivos `apps/web/public/_redirects` (rotas do SPA) e
    `apps/web/public/_headers` (cabeçalhos de segurança) são publicados
-   automaticamente. Ajuste o `connect-src` do `_headers` para o domínio real da API.
+   automaticamente. O `connect-src` do `_headers` é preenchido no build com a
+   origem de `VITE_API_URL`.
 5. Restrinja o acesso ao uso interno (recomendado): **Zero Trust → Access →
    Applications** → proteja o domínio do front exigindo e-mail
    `@gestaocontadores.com.br` (ou a rede do escritório). Isso soma uma camada ao
