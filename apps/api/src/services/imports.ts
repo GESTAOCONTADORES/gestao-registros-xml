@@ -167,6 +167,9 @@ export async function ingestBatch(ctx: AppContext, runId: number, body: unknown)
           fileHash: realHash,
           status: 'ERROR',
           errorMessage: msg,
+          // competência considerada pelo agente no filtro (data do arquivo como último recurso)
+          year: Number(f.metadata?.year) || new Date(f.fileModifiedAt).getFullYear(),
+          month: Number(f.metadata?.month) || new Date(f.fileModifiedAt).getMonth() + 1,
           content: content.length <= MAX_ERROR_CONTENT ? content : null,
         });
         continue;
